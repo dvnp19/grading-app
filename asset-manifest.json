@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/grading-app/static/css/main.0ce86293.css",
-    "main.js": "/grading-app/static/js/main.913bc738.js",
+    "main.js": "/grading-app/static/js/main.1af2109e.js",
     "static/js/453.117b0875.chunk.js": "/grading-app/static/js/453.117b0875.chunk.js",
     "index.html": "/grading-app/index.html",
     "main.0ce86293.css.map": "/grading-app/static/css/main.0ce86293.css.map",
-    "main.913bc738.js.map": "/grading-app/static/js/main.913bc738.js.map",
+    "main.1af2109e.js.map": "/grading-app/static/js/main.1af2109e.js.map",
     "453.117b0875.chunk.js.map": "/grading-app/static/js/453.117b0875.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.0ce86293.css",
-    "static/js/main.913bc738.js"
+    "static/js/main.1af2109e.js"
   ]
 }
