@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 
-export default function MarksCalculator() {
-  const [marks, setMarks] = useState([0, 0, 0, 0, 0]);
+function App() {
+  const subjects = ["English LIT", "Gen Eng", "Math", "EVS", "Gujarati", "Hindi"];
+  const [marks, setMarks] = useState(Array(subjects.length).fill(0));
 
   const handleChange = (index, value) => {
     const newMarks = [...marks];
@@ -11,11 +12,11 @@ export default function MarksCalculator() {
   };
 
   const handleReset = () => {
-    setMarks([0, 0, 0, 0, 0]);
+    setMarks(Array(subjects.length).fill(0));
   };
 
   const total = marks.reduce((sum, mark) => sum + mark, 0);
-  const percentage = (total / 500) * 100;
+  const percentage = (total / (subjects.length * 100)) * 100;
 
   const getGrade = (percent) => {
     if (percent >= 90) return "A+";
@@ -36,16 +37,16 @@ export default function MarksCalculator() {
         </h1>
 
         <div className="space-y-4">
-          {marks.map((mark, index) => (
+          {subjects.map((subject, index) => (
             <div key={index} className="flex flex-col">
               <label className="text-gray-700 font-medium mb-1">
-                Subject {index + 1}
+                {subject}
               </label>
               <input
                 type="number"
                 min="0"
                 max="100"
-                value={mark}
+                value={marks[index]}
                 onChange={(e) => handleChange(index, e.target.value)}
                 className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
                 placeholder="Enter marks out of 100"
@@ -56,11 +57,10 @@ export default function MarksCalculator() {
 
         <div className="mt-8 border-t pt-5 text-center space-y-3">
           <p className="text-lg font-semibold text-gray-700">
-            Total: <span className="text-indigo-600">{total}</span> / 500
+            Total: <span className="text-indigo-600">{total}</span> / {subjects.length * 100}
           </p>
           <p className="text-lg font-semibold text-gray-700">
-            Percentage:{" "}
-            <span className="text-green-600">{percentage.toFixed(2)}%</span>
+            Percentage: <span className="text-green-600">{percentage.toFixed(2)}%</span>
           </p>
           <p className="text-lg font-semibold text-gray-700">
             Grade:{" "}
@@ -77,7 +77,7 @@ export default function MarksCalculator() {
             </span>
           </p>
 
-          {/* Progress bar */}
+          {/* Animated Progress Bar */}
           <div className="w-full bg-gray-200 rounded-full h-4 mt-4 overflow-hidden">
             <motion.div
               className="h-4 bg-gradient-to-r from-indigo-500 to-green-400"
@@ -87,7 +87,7 @@ export default function MarksCalculator() {
             />
           </div>
 
-          {/* Reset button */}
+          {/* Reset Button */}
           <button
             onClick={handleReset}
             className="mt-6 bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow transition-all duration-200"
@@ -99,3 +99,5 @@ export default function MarksCalculator() {
     </div>
   );
 }
+
+export default App;
