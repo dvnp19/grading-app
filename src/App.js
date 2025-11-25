@@ -7,22 +7,13 @@ const App = () => (
   <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
     {/* Navbar */}
     <nav className="bg-white shadow-md p-4 flex justify-center space-x-6 sticky top-0 z-50">
-      <Link
-        to="/"
-        className="text-gray-700 font-semibold hover:text-indigo-600 transition-colors duration-200"
-      >
+      <Link to="/" className="text-gray-700 font-semibold hover:text-indigo-600 transition-colors duration-200">
         Home
       </Link>
-      <Link
-        to="/grading-calculator"
-        className="text-gray-700 font-semibold hover:text-indigo-600 transition-colors duration-200"
-      >
+      <Link to="/grading-calculator" className="text-gray-700 font-semibold hover:text-indigo-600 transition-colors duration-200">
         Grade Calculator
       </Link>
-      <Link
-        to="/attendance-calculator"
-        className="text-gray-700 font-semibold hover:text-indigo-600 transition-colors duration-200"
-      >
+      <Link to="/attendance-calculator" className="text-gray-700 font-semibold hover:text-indigo-600 transition-colors duration-200">
         Attendance Calculator
       </Link>
     </nav>

@@ -110,11 +110,11 @@ const AttendanceCalculator = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {(
             [
-              ['totalBoys', 'Total Boys'],
-              ['totalGirls', 'Total Girls'],
-              ['totalAbsentBoys', 'Absent Boys'],
-              ['totalAbsentGirls', 'Absent Girls'],
-              ['daysInMonth', 'Days in Month'],
+              ['totalBoys', 'On Roll Boys'],
+              ['totalGirls', 'On Roll Girls'],
+              ['totalAbsentBoys', 'Absent Boys In A Month'],
+              ['totalAbsentGirls', 'Absent Girls In A Month'],
+              ['daysInMonth', 'Total Days in A Month'],
             ] satisfies [Field, string][]
           ).map(([field, label]) => (
             <div key={field} className="flex flex-col">
@@ -158,6 +158,12 @@ const AttendanceCalculator = () => {
           transition={{ duration: 0.6 }}
           className="grid gap-4"
         >
+          {/* Total Average */}
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-xl p-5 shadow-xl flex justify-between items-center">
+            <span className="font-semibold text-lg">Total Average:</span>
+            <span className="font-extrabold text-2xl">{result.totalAvg}</span>
+          </div>
+
           {/* Total Students */}
           <div className="bg-indigo-100 rounded-xl p-4 shadow flex justify-between items-center">
             <span className="font-semibold text-indigo-700">Total Students:</span>
@@ -168,16 +174,10 @@ const AttendanceCalculator = () => {
 
           {/* Total Presence */}
           <div className="bg-green-100 rounded-xl p-4 shadow flex justify-between items-center">
-            <span className="font-semibold text-green-700">Total Presence:</span>
+            <span className="font-semibold text-green-700">Total Students Present:</span>
             <span className="text-green-900 font-bold text-lg">
               {result.totalBoysPresent + result.totalGirlsPresent}
             </span>
-          </div>
-
-          {/* Total Average */}
-          <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-xl p-5 shadow-xl flex justify-between items-center">
-            <span className="font-semibold text-lg">Total Average:</span>
-            <span className="font-extrabold text-2xl">{result.totalAvg}</span>
           </div>
 
           {/* Individual Cards */}
@@ -195,7 +195,7 @@ const AttendanceCalculator = () => {
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{
-                    width: `${(result.avgBoysPresent / Number(form.daysInMonth || 1)) * 100}%`,
+                    width: `${(result.avgBoysPresent / Number(form.totalBoys)) * 100}%`,
                   }}
                   className="h-3 bg-blue-500 rounded-full"
                   transition={{ duration: 0.8 }}
@@ -216,7 +216,7 @@ const AttendanceCalculator = () => {
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{
-                    width: `${(result.avgGirlsPresent / Number(form.daysInMonth || 1)) * 100}%`,
+                    width: `${(result.avgGirlsPresent / Number(form.totalGirls)) * 100}%`,
                   }}
                   className="h-3 bg-pink-500 rounded-full"
                   transition={{ duration: 0.8 }}
