@@ -31,29 +31,19 @@ const AttendanceCalculator = () => {
 
   const validate = (field: Field, value: string) => {
     const num = Number(value);
-
-    // Required
     if (value === '') return 'This field is required';
-
-    // Negative
     if (num < 0) return 'Value cannot be negative';
-
-    // Days validation
-    if (field === 'daysInMonth' && num <= 0) {
-      return 'Days must be greater than 0';
-    }
+    if (field === 'daysInMonth' && num <= 0) return 'Days must be greater than 0';
     return '';
   };
 
   const handleChange = (field: Field, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-
-    const errorMsg = validate(field, value);
-    setErrors((prev) => ({ ...prev, [field]: errorMsg }));
+    setErrors((prev) => ({ ...prev, [field]: validate(field, value) }));
   };
 
-  const hasErrors = Object.values(errors).some((e) => e !== '');
   const allFilled = Object.values(form).every((f) => f !== '');
+  const hasErrors = Object.values(errors).some((e) => e !== '');
   const canCalculate = allFilled && !hasErrors;
 
   const handleCalculate = () => {
@@ -64,12 +54,10 @@ const AttendanceCalculator = () => {
     const days = Number(form.daysInMonth);
 
     const boys = attendanceService.calculateTotalPresenceInAMonth(totalBoys, days) - absentBoys;
-
     const girls = attendanceService.calculateTotalPresenceInAMonth(totalGirls, days) - absentGirls;
 
     const avgBoysPresent = Number((boys / days).toFixed(1));
     const avgGirlsPresent = Number((girls / days).toFixed(1));
-
     const totalAvg = Number((avgBoysPresent + avgGirlsPresent).toFixed(1));
 
     setResult({
@@ -89,7 +77,6 @@ const AttendanceCalculator = () => {
       totalAbsentGirls: '',
       daysInMonth: '',
     });
-
     setErrors({
       totalBoys: '',
       totalGirls: '',
@@ -97,7 +84,6 @@ const AttendanceCalculator = () => {
       totalAbsentGirls: '',
       daysInMonth: '',
     });
-
     setResult({
       totalBoysPresent: 0,
       totalGirlsPresent: 0,
@@ -109,72 +95,68 @@ const AttendanceCalculator = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      {/* Animated Card */}
+      {/* Card with Animation */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md"
+        className="bg-white shadow-2xl rounded-3xl p-8 w-full max-w-3xl"
       >
         <h1 className="text-3xl font-bold text-center mb-6 text-indigo-700">
-          🙋🏻‍♀️ Monthly Attendance Calculator
+          🙋🏻‍♀️ Monthly Attendance Dashboard
         </h1>
 
-        {/* Dynamic Inputs */}
-        {(
-          [
-            ['totalBoys', 'Total Boys'],
-            ['totalGirls', 'Total Girls'],
-            ['totalAbsentBoys', 'Absent Boys'],
-            ['totalAbsentGirls', 'Absent Girls'],
-            ['daysInMonth', 'Days In Month'],
-          ] satisfies [Field, string][]
-        ).map(([field, label]) => (
-          <div key={field} className="mt-4">
-            <label className="font-medium">{label}</label>
-            <input
-              type="number"
-              value={form[field]}
-              onChange={(e) => handleChange(field, e.target.value)}
-              className={`border mt-1 w-full border-gray-300 rounded-lg px-3 py-2 focus:ring-2 
-                ${errors[field] ? 'border-red-500' : 'focus:ring-indigo-400'}`}
-              placeholder={`Enter ${label}`}
-            />
+        {/* --- INPUTS --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          {(
+            [
+              ['totalBoys', 'Total Boys'],
+              ['totalGirls', 'Total Girls'],
+              ['totalAbsentBoys', 'Absent Boys'],
+              ['totalAbsentGirls', 'Absent Girls'],
+              ['daysInMonth', 'Days in Month'],
+            ] satisfies [Field, string][]
+          ).map(([field, label]) => (
+            <div key={field} className="flex flex-col">
+              <label className="font-semibold mb-1">{label}</label>
+              <input
+                type="number"
+                value={form[field]}
+                onChange={(e) => handleChange(field, e.target.value)}
+                className={`border rounded-xl px-3 py-2 focus:ring-2 focus:outline-none
+                  ${errors[field] ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-indigo-400'}`}
+                placeholder={`Enter ${label}`}
+              />
+              {errors[field] && (
+                <motion.span
+                  className="text-red-600 text-sm mt-1"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  {errors[field]}
+                </motion.span>
+              )}
+            </div>
+          ))}
+        </div>
 
-            {/* Validation Error */}
-            {errors[field] && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-red-600 text-sm mt-1"
-              >
-                {errors[field]}
-              </motion.p>
-            )}
-          </div>
-        ))}
-
-        {/* Calculate Button */}
+        {/* --- CALCULATE BUTTON --- */}
         <motion.button
           whileTap={{ scale: canCalculate ? 0.95 : 1 }}
           onClick={handleCalculate}
           disabled={!canCalculate}
-          className={`mt-6 w-full font-semibold px-4 py-2 rounded-lg shadow transition-all duration-200
-          ${
-            canCalculate
-              ? 'bg-blue-500 hover:bg-green-600 text-white'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
+          className={`w-full py-3 rounded-xl font-semibold shadow-lg mb-6 transition-all duration-200
+            ${canCalculate ? 'bg-blue-500 hover:bg-green-500 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
         >
-          Calculate Total
+          Calculate Attendance
         </motion.button>
 
-        {/* --- RESULTS SECTION --- */}
+        {/* --- RESULTS DASHBOARD --- */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mt-8 grid gap-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="grid gap-4"
         >
           {/* Total Students */}
           <div className="bg-indigo-100 rounded-xl p-4 shadow flex justify-between items-center">
@@ -192,10 +174,16 @@ const AttendanceCalculator = () => {
             </span>
           </div>
 
-          {/* Individual Counts */}
-          <div className="flex gap-4">
-            {/* Boys */}
-            <div className="flex-1 bg-blue-50 rounded-xl p-4 shadow text-center">
+          {/* Total Average */}
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-xl p-5 shadow-xl flex justify-between items-center">
+            <span className="font-semibold text-lg">Total Average:</span>
+            <span className="font-extrabold text-2xl">{result.totalAvg}</span>
+          </div>
+
+          {/* Individual Cards */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Boys Card */}
+            <div className="flex-1 bg-blue-50 p-4 rounded-xl shadow text-center">
               <h3 className="font-medium text-blue-700 mb-2">Boys</h3>
               <p>
                 Total Present: <span className="font-bold">{result.totalBoysPresent}</span>
@@ -215,8 +203,8 @@ const AttendanceCalculator = () => {
               </div>
             </div>
 
-            {/* Girls */}
-            <div className="flex-1 bg-pink-50 rounded-xl p-4 shadow text-center">
+            {/* Girls Card */}
+            <div className="flex-1 bg-pink-50 p-4 rounded-xl shadow text-center">
               <h3 className="font-medium text-pink-700 mb-2">Girls</h3>
               <p>
                 Total Present: <span className="font-bold">{result.totalGirlsPresent}</span>
@@ -236,19 +224,13 @@ const AttendanceCalculator = () => {
               </div>
             </div>
           </div>
-
-          {/* Total Average */}
-          <div className="bg-yellow-100 rounded-xl p-4 shadow flex justify-between items-center">
-            <span className="font-semibold text-yellow-700">Total Average:</span>
-            <span className="text-yellow-900 font-bold text-lg">{result.totalAvg}</span>
-          </div>
         </motion.div>
 
-        {/* Reset Button */}
+        {/* RESET BUTTON */}
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={handleReset}
-          className="mt-6 w-full bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
+          className="w-full py-3 mt-6 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold shadow-lg"
         >
           Reset
         </motion.button>
