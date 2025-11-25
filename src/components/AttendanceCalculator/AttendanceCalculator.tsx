@@ -1,197 +1,258 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import attendanceService from './AttendanceCalculatorService';
 
+type Field = 'totalBoys' | 'totalGirls' | 'totalAbsentBoys' | 'totalAbsentGirls' | 'daysInMonth';
+
 const AttendanceCalculator = () => {
-  const [totalBoys, setTotalBoys] = useState<number>();
-  const [totalGirls, setTotalGirls] = useState<number>();
-  const [totalAbsentBoys, setTotalAbsentBoys] = useState<number>();
-  const [totalAbsentGirls, setTotalAbsentGirls] = useState<number>();
-  const [daysInMnoth, setDaysInMnoth] = useState(0);
+  const [form, setForm] = useState({
+    totalBoys: '',
+    totalGirls: '',
+    totalAbsentBoys: '',
+    totalAbsentGirls: '',
+    daysInMonth: '',
+  });
 
-  const [totalBoysPresent, setTotalBoysPresent] = useState(0);
-  const [totalGirlsPresent, setTotalGirlsPresent] = useState(0);
-  const [avgBoysPresent, setAvgBoysPresent] = useState(0);
-  const [avgGirlsPresent, setAvgGirlsPresent] = useState(0);
-  const [totalAvg, setTotalAvg] = useState(0);
+  const [errors, setErrors] = useState<Record<Field, string>>({
+    totalBoys: '',
+    totalGirls: '',
+    totalAbsentBoys: '',
+    totalAbsentGirls: '',
+    daysInMonth: '',
+  });
 
-  const handleChange = (entity: any, value: any) => {
-    if (entity === 'boys') {
-      const newTotalBoys = Math.max(0, Number(value) || 0);
-      setTotalBoys(newTotalBoys);
+  const [result, setResult] = useState({
+    totalBoysPresent: 0,
+    totalGirlsPresent: 0,
+    avgBoysPresent: 0,
+    avgGirlsPresent: 0,
+    totalAvg: 0,
+  });
+
+  const validate = (field: Field, value: string) => {
+    const num = Number(value);
+
+    // Required
+    if (value === '') return 'This field is required';
+
+    // Negative
+    if (num < 0) return 'Value cannot be negative';
+
+    // Days validation
+    if (field === 'daysInMonth' && num <= 0) {
+      return 'Days must be greater than 0';
     }
-    if (entity === 'girls') {
-      const newTotalGirls = Math.max(0, Number(value) || 0);
-      setTotalGirls(newTotalGirls);
-    }
-    if (entity === 'absentBoys') {
-      const newTotalAbsentBoys = Math.max(0, Number(value) || 0);
-      setTotalAbsentBoys(newTotalAbsentBoys);
-    }
-    if (entity === 'absentGirls') {
-      const newTotalAbsentGirls = Math.max(0, Number(value) || 0);
-      setTotalAbsentGirls(newTotalAbsentGirls);
-    }
-    if (entity === 'daysInMnoth') {
-      const newDaysInMnoth = Math.min(31, Math.max(0, Number(value) || 0));
-      setDaysInMnoth(newDaysInMnoth);
-    }
+    return '';
+  };
+
+  const handleChange = (field: Field, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+    const errorMsg = validate(field, value);
+    setErrors((prev) => ({ ...prev, [field]: errorMsg }));
+  };
+
+  const hasErrors = Object.values(errors).some((e) => e !== '');
+  const allFilled = Object.values(form).every((f) => f !== '');
+  const canCalculate = allFilled && !hasErrors;
+
+  const handleCalculate = () => {
+    const totalBoys = Number(form.totalBoys);
+    const totalGirls = Number(form.totalGirls);
+    const absentBoys = Number(form.totalAbsentBoys);
+    const absentGirls = Number(form.totalAbsentGirls);
+    const days = Number(form.daysInMonth);
+
+    const boys = attendanceService.calculateTotalPresenceInAMonth(totalBoys, days) - absentBoys;
+
+    const girls = attendanceService.calculateTotalPresenceInAMonth(totalGirls, days) - absentGirls;
+
+    const avgBoysPresent = Number((boys / days).toFixed(1));
+    const avgGirlsPresent = Number((girls / days).toFixed(1));
+
+    const totalAvg = Number((avgBoysPresent + avgGirlsPresent).toFixed(1));
+
+    setResult({
+      totalBoysPresent: boys,
+      totalGirlsPresent: girls,
+      avgBoysPresent,
+      avgGirlsPresent,
+      totalAvg,
+    });
   };
 
   const handleReset = () => {
-    setTotalBoys(0);
-    setTotalGirls(0);
-    setTotalAbsentBoys(0);
-    setTotalAbsentGirls(0);
-    setDaysInMnoth(0);
-    setTotalBoysPresent(0);
-    setTotalGirlsPresent(0);
-    setAvgBoysPresent(0);
-    setAvgGirlsPresent(0);
-    setTotalAvg(0);
+    setForm({
+      totalBoys: '',
+      totalGirls: '',
+      totalAbsentBoys: '',
+      totalAbsentGirls: '',
+      daysInMonth: '',
+    });
+
+    setErrors({
+      totalBoys: '',
+      totalGirls: '',
+      totalAbsentBoys: '',
+      totalAbsentGirls: '',
+      daysInMonth: '',
+    });
+
+    setResult({
+      totalBoysPresent: 0,
+      totalGirlsPresent: 0,
+      avgBoysPresent: 0,
+      avgGirlsPresent: 0,
+      totalAvg: 0,
+    });
   };
 
-  const hadnleCalculateToal = () => {
-    const boys = calculateTotalBoysPresent();
-    const girls = calculateTotalGirlsPresent();
-    const avgBoys = calculateAverageBoysPresent(boys);
-    const avgGirls = calculateAverageGirlsPresent(girls);
-    const totalAvg = Number((Number(avgBoys) + Number(avgGirls)).toFixed(1));
-    setTotalAvg(totalAvg);
-  };
-
-  const calculateTotalBoysPresent = () => {
-    const res = attendanceService.calculateTotalPresenceInAMonth(totalBoys || 0, daysInMnoth || 0);
-    setTotalBoysPresent(res - (totalAbsentBoys || 0));
-    return res - (totalAbsentBoys || 0);
-  };
-
-  const calculateTotalGirlsPresent = () => {
-    const res = attendanceService.calculateTotalPresenceInAMonth(totalGirls || 0, daysInMnoth || 0);
-    setTotalGirlsPresent(res - (totalAbsentGirls || 0));
-    return res - (totalAbsentGirls || 0);
-  };
-
-  const calculateAverageBoysPresent = (total: number) => {
-    const avg = Number((total / daysInMnoth).toFixed(1));
-    setAvgBoysPresent(avg);
-    return avg;
-  };
-  const calculateAverageGirlsPresent = (total: number) => {
-    const avg = Number((total / daysInMnoth).toFixed(1));
-    setAvgGirlsPresent(avg);
-    return avg;
-  };
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md transition-all duration-300 hover:shadow-2xl">
+      {/* Animated Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md"
+      >
         <h1 className="text-3xl font-bold text-center mb-6 text-indigo-700">
           🙋🏻‍♀️ Monthly Attendance Calculator
         </h1>
 
-        {/* Enter Total */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4">
-          {/* Boys */}
-          <div className="flex flex-col flex-1">
-            <label className="text-blue-700 font-medium mb-1">Total Boys:</label>
+        {/* Dynamic Inputs */}
+        {(
+          [
+            ['totalBoys', 'Total Boys'],
+            ['totalGirls', 'Total Girls'],
+            ['totalAbsentBoys', 'Absent Boys'],
+            ['totalAbsentGirls', 'Absent Girls'],
+            ['daysInMonth', 'Days In Month'],
+          ] satisfies [Field, string][]
+        ).map(([field, label]) => (
+          <div key={field} className="mt-4">
+            <label className="font-medium">{label}</label>
             <input
               type="number"
-              min="0"
-              max="100"
-              value={totalBoys}
-              onChange={(e) => handleChange('boys', e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-              placeholder="Enter Total Number Of Boys"
+              value={form[field]}
+              onChange={(e) => handleChange(field, e.target.value)}
+              className={`border mt-1 w-full border-gray-300 rounded-lg px-3 py-2 focus:ring-2 
+                ${errors[field] ? 'border-red-500' : 'focus:ring-indigo-400'}`}
+              placeholder={`Enter ${label}`}
             />
+
+            {/* Validation Error */}
+            {errors[field] && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-red-600 text-sm mt-1"
+              >
+                {errors[field]}
+              </motion.p>
+            )}
+          </div>
+        ))}
+
+        {/* Calculate Button */}
+        <motion.button
+          whileTap={{ scale: canCalculate ? 0.95 : 1 }}
+          onClick={handleCalculate}
+          disabled={!canCalculate}
+          className={`mt-6 w-full font-semibold px-4 py-2 rounded-lg shadow transition-all duration-200
+          ${
+            canCalculate
+              ? 'bg-blue-500 hover:bg-green-600 text-white'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          Calculate Total
+        </motion.button>
+
+        {/* --- RESULTS SECTION --- */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mt-8 grid gap-4"
+        >
+          {/* Total Students */}
+          <div className="bg-indigo-100 rounded-xl p-4 shadow flex justify-between items-center">
+            <span className="font-semibold text-indigo-700">Total Students:</span>
+            <span className="text-indigo-900 font-bold text-lg">
+              {Number(form.totalBoys) + Number(form.totalGirls)}
+            </span>
           </div>
 
-          {/* Girls */}
-          <div className="flex flex-col flex-1">
-            <label className="text-blue-700 font-medium mb-1">Total Girls:</label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={totalGirls}
-              onChange={(e) => handleChange('girls', e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-              placeholder="Enter Total Number Of Girls"
-            />
-          </div>
-        </div>
-
-        {/* Enter Absents */}
-        <div className="flex  border-t pt-2 flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4">
-          {/* Absent Boys */}
-          <div className="flex flex-col flex-1">
-            <label className="text-red-600 font-medium mb-1 ">Total Boys Absent:</label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={totalAbsentBoys}
-              onChange={(e) => handleChange('absentBoys', e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-              placeholder="Enter number of absent boys"
-            />
+          {/* Total Presence */}
+          <div className="bg-green-100 rounded-xl p-4 shadow flex justify-between items-center">
+            <span className="font-semibold text-green-700">Total Presence:</span>
+            <span className="text-green-900 font-bold text-lg">
+              {result.totalBoysPresent + result.totalGirlsPresent}
+            </span>
           </div>
 
-          {/* Absent Girls */}
-          <div className="flex flex-col flex-1">
-            <label className="text-red-600 font-medium mb-1">Total Girls Absent:</label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={totalAbsentGirls}
-              onChange={(e) => handleChange('absentGirls', e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-              placeholder="Enter number of absent girls"
-            />
-          </div>
-        </div>
-        <div className="mt-8 border-t pt-5 text-center space-y-3">
-          {/* Days in a month */}
-          <div className="flex flex-col flex-1">
-            <label className="text-orange-600 font-medium mb-1">Total Days In A Month</label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={daysInMnoth}
-              onChange={(e) => handleChange('daysInMnoth', e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-              placeholder="Enter total days in a month"
-            />
-          </div>
-          {/* Action Button */}
-          <div>
-            <button
-              onClick={hadnleCalculateToal}
-              className="mt-6 bg-blue-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow transition-all duration-200"
-            >
-              Calculate Total
-            </button>
-          </div>
-        </div>
-        <div className="mt-8 border-t pt-5 text-center space-y-3">
-          <p className="text-lg font text-gray-700">Total Boys Present: {totalBoysPresent}</p>
-          <p className="text-lg font text-gray-700">Total Girls Present: {totalGirlsPresent}</p>
-          <p className="text-lg font-bold text-gray-700">
-            Total Presence: {totalBoysPresent + totalGirlsPresent}
-          </p>
-          <p className="text-lg font text-gray-700">Boys Average: {avgBoysPresent}</p>
-          <p className="text-lg font text-gray-700">Girls Average: {avgGirlsPresent}</p>
-          <p className="text-lg font-bold text-gray-700">Total Average: {totalAvg}</p>
+          {/* Individual Counts */}
+          <div className="flex gap-4">
+            {/* Boys */}
+            <div className="flex-1 bg-blue-50 rounded-xl p-4 shadow text-center">
+              <h3 className="font-medium text-blue-700 mb-2">Boys</h3>
+              <p>
+                Total Present: <span className="font-bold">{result.totalBoysPresent}</span>
+              </p>
+              <p>
+                Average: <span className="font-bold">{result.avgBoysPresent}</span>
+              </p>
+              <div className="h-3 bg-blue-200 rounded-full mt-2 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{
+                    width: `${(result.avgBoysPresent / Number(form.daysInMonth || 1)) * 100}%`,
+                  }}
+                  className="h-3 bg-blue-500 rounded-full"
+                  transition={{ duration: 0.8 }}
+                />
+              </div>
+            </div>
 
-          {/* Reset Button */}
-          <button
-            onClick={handleReset}
-            className="mt-6 bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow transition-all duration-200"
-          >
-            Reset
-          </button>
-        </div>
-      </div>
+            {/* Girls */}
+            <div className="flex-1 bg-pink-50 rounded-xl p-4 shadow text-center">
+              <h3 className="font-medium text-pink-700 mb-2">Girls</h3>
+              <p>
+                Total Present: <span className="font-bold">{result.totalGirlsPresent}</span>
+              </p>
+              <p>
+                Average: <span className="font-bold">{result.avgGirlsPresent}</span>
+              </p>
+              <div className="h-3 bg-pink-200 rounded-full mt-2 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{
+                    width: `${(result.avgGirlsPresent / Number(form.daysInMonth || 1)) * 100}%`,
+                  }}
+                  className="h-3 bg-pink-500 rounded-full"
+                  transition={{ duration: 0.8 }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Average */}
+          <div className="bg-yellow-100 rounded-xl p-4 shadow flex justify-between items-center">
+            <span className="font-semibold text-yellow-700">Total Average:</span>
+            <span className="text-yellow-900 font-bold text-lg">{result.totalAvg}</span>
+          </div>
+        </motion.div>
+
+        {/* Reset Button */}
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={handleReset}
+          className="mt-6 w-full bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
+        >
+          Reset
+        </motion.button>
+      </motion.div>
     </div>
   );
 };
